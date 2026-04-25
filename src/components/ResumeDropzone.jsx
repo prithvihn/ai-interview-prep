@@ -33,7 +33,7 @@ function computeRating(matchCount) {
   return { label: 'Low', className: 'bg-red-500/15 text-red-400' }
 }
 
-export default function ResumeDropzone({ onFile, file, jobTitle = '' }) {
+export default function ResumeDropzone({ onFile, file, jobTitle = '', onAnalysis }) {
   const [dragging, setDragging] = useState(false)
   const [error, setError] = useState(null)
   const [analyzing, setAnalyzing] = useState(false)
@@ -66,26 +66,30 @@ export default function ResumeDropzone({ onFile, file, jobTitle = '' }) {
       const targetSkills = ROLE_SKILLS[roleKey] || SKILLS
       const matchedSkills = targetSkills.filter((skill) => combined.includes(skill))
       const rating = computeRating(matchedSkills.length)
-      setAnalysis({
+      const nextAnalysis = {
         rating,
         matchedSkills,
         targetSkillsCount: targetSkills.length,
-      })
+      }
+      setAnalysis(nextAnalysis)
+      onAnalysis?.(nextAnalysis)
     } catch (_e) {
       // Keep graceful fallback for binary formats that don't decode cleanly.
       const fallbackMatched = SKILLS.filter((skill) =>
         selectedFile.name.toLowerCase().includes(skill)
       )
       const rating = computeRating(fallbackMatched.length)
-      setAnalysis({
+      const nextAnalysis = {
         rating,
         matchedSkills: fallbackMatched,
         targetSkillsCount: SKILLS.length,
-      })
+      }
+      setAnalysis(nextAnalysis)
+      onAnalysis?.(nextAnalysis)
     } finally {
       setAnalyzing(false)
     }
-  }, [])
+  }, [jobTitle, onAnalysis])
 
   const processFile = useCallback(
     async (selectedFile) => {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import ResumeDropzone from '../components/ResumeDropzone'
 import { resume as resumeStorage, session as sessionStorage } from '../utils/storage'
 
 const SAMPLE_ROLES = [
@@ -16,7 +15,6 @@ export default function Upload() {
   const [jobDescription, setJobDescription] = useState('')
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [tab, setTab] = useState('description') // 'description' | 'resume'
 
   useEffect(() => {
     const saved = resumeStorage.get()
@@ -80,27 +78,23 @@ export default function Upload() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex gap-1 bg-surface border border-border rounded-xl p-1 mb-5 w-fit">
-          <TabBtn active={tab === 'description'} onClick={() => setTab('description')}>
-            Job Description
-          </TabBtn>
-          <TabBtn active={tab === 'resume'} onClick={() => setTab('resume')}>
-            Resume (optional)
-          </TabBtn>
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <span className="text-xs font-medium text-muted">Need resume feedback?</span>
+          <button
+            onClick={() => navigate(`/resume?role=${encodeURIComponent(jobTitle || params.get('role') || '')}`)}
+            className="btn-secondary text-xs py-2 px-3"
+          >
+            Upload Resume & Get Roadmap
+          </button>
         </div>
 
-        {/* Tab content */}
-        {tab === 'description' ? (
-          <textarea
-            rows={7}
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-            placeholder="Paste the full job description here for more accurate questions…"
-            className="input resize-none leading-relaxed"
-          />
-        ) : (
-          <ResumeDropzone onFile={setFile} file={file} jobTitle={jobTitle} />
-        )}
+        <textarea
+          rows={7}
+          value={jobDescription}
+          onChange={(e) => setJobDescription(e.target.value)}
+          placeholder="Paste the full job description here for more accurate questions…"
+          className="input resize-none leading-relaxed"
+        />
 
         {/* CTA */}
         <button
@@ -126,18 +120,6 @@ export default function Upload() {
   )
 }
 
-function TabBtn({ active, onClick, children }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`text-xs font-medium px-4 py-2 rounded-lg transition-colors
-        ${active ? 'bg-accent text-black' : 'text-muted hover:text-white'}`}
-    >
-      {children}
-    </button>
-  )
-}
-
 function Spinner() {
   return (
     <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -147,7 +129,7 @@ function Spinner() {
 }
 
 function StepBar({ current }) {
-  const steps = ['Setup', 'Interview', 'Report']
+  const steps = ['Setup', 'Resume', 'Interview', 'Report']
   return (
     <div className="border-b border-border px-6 py-3 flex items-center gap-2">
       {steps.map((s, i) => (
