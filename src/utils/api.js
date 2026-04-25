@@ -46,6 +46,17 @@ export const getFeedback = async (payload) => {
   return response.data
 }
 
+// ── Batch Questions ──────────────────────────────────────────────────────────
+/**
+ * Generate a batch of questions for a specific category.
+ * @param {{ session_id: string, category?: string, count?: number }} payload
+ * @returns {{ session_id, category, questions: { question, question_type, hint, difficulty }[] }}
+ */
+export const getBatchQuestions = async (payload) => {
+  const response = await api.post('/api/batch-questions', payload)
+  return response.data
+}
+
 // ── Report ───────────────────────────────────────────────────────────────────
 /**
  * Generate the final interview report for a session.
