@@ -6,12 +6,13 @@ const INITIAL_STATE = {
   jobTitle: '',
   jobDescription: '',
   resumeId: null,
-  questions: [],
+  questions: [],        // [{ id, text, category, difficulty, hint }]
   currentIndex: 0,
   answers: [],           // [{ questionId, transcript, durationSeconds, feedback }]
   status: 'idle',        // idle | loading | active | paused | finished
   startedAt: null,
   endedAt: null,
+  preferredCategory: null, // hr | communication | technical | behavioural | situational | motivational | null (all)
 }
 
 /**
@@ -48,6 +49,24 @@ export function useInterview() {
 
   const setQuestions = useCallback((questions) => {
     update({ questions, status: 'active' })
+  }, [update])
+
+  /**
+   * Add a single AI-generated question to the list dynamically.
+   */
+  const addQuestion = useCallback((question) => {
+    update((prev) => ({
+      ...prev,
+      questions: [...prev.questions, question],
+      status: 'active',
+    }))
+  }, [update])
+
+  /**
+   * Set the preferred question category filter.
+   */
+  const setPreferredCategory = useCallback((category) => {
+    update({ preferredCategory: category })
   }, [update])
 
   const currentQuestion = state.questions[state.currentIndex] ?? null
@@ -126,6 +145,8 @@ export function useInterview() {
     elapsed,
     initSession,
     setQuestions,
+    addQuestion,
+    setPreferredCategory,
     submitAnswer,
     setFeedback,
     nextQuestion,

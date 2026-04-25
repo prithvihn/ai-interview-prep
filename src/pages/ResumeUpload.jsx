@@ -1,14 +1,42 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { jsPDF } from 'jspdf'
 import ResumeDropzone from '../components/ResumeDropzone'
+import { analyseResume } from '../utils/api'
+import { session as sessionStorage } from '../utils/storage'
 
 export default function ResumeUpload() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [file, setFile] = useState(null)
   const [analysis, setAnalysis] = useState(null)
+  const [aiAnalysis, setAiAnalysis] = useState(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState(null)
   const jobTitle = params.get('role') || ''
+
+  // Call backend AI analysis when a file is selected
+  useEffect(() => {
+    if (!file || !jobTitle.trim()) return
+    setAiLoading(true)
+    setAiError(null)
+    analyseResume(file, jobTitle.trim())
+      .then((data) => {
+        setAiAnalysis(data)
+        // Store session_id for the interview flow
+        const saved = sessionStorage.get() || {}
+        sessionStorage.set({
+          ...saved,
+          sessionId: data.session_id,
+          jobTitle: jobTitle.trim(),
+        })
+      })
+      .catch((err) => {
+        console.error('AI analysis failed:', err)
+        setAiError(err.response?.data?.detail || 'Backend AI analysis failed. You can still continue.')
+      })
+      .finally(() => setAiLoading(false))
+  }, [file])
 
   const roadmap = useMemo(() => buildRoadmap({ jobTitle, analysis }), [jobTitle, analysis])
 
@@ -92,6 +120,67 @@ export default function ResumeUpload() {
         </p>
 
         <ResumeDropzone onFile={setFile} file={file} jobTitle={jobTitle} onAnalysis={setAnalysis} />
+
+        {/* AI Analysis from backend */}
+        {aiLoading && (
+          <div className="card mt-4 flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-muted">AI is analyzing your resume…</p>
+          </div>
+        )}
+        {aiError && (
+          <div className="card mt-4 border-red-900/30">
+            <p className="text-xs text-red-400">{aiError}</p>
+          </div>
+        )}
+        {aiAnalysis && !aiLoading && (
+          <div className="card mt-4">
+            <p className="text-xs font-semibold text-accent uppercase tracking-wider mb-3">🤖 AI Resume Analysis</p>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="rounded-xl border border-border bg-surface p-3 text-center">
+                <p className="text-2xl font-display font-bold text-accent">{Math.round(aiAnalysis.overall_fit_score || 0)}</p>
+                <p className="text-xs text-muted mt-0.5">Fit Score</p>
+              </div>
+              <div className="rounded-xl border border-border bg-surface p-3 text-center">
+                <p className="text-2xl font-display font-bold text-white">{aiAnalysis.skills_found?.length || 0}</p>
+                <p className="text-xs text-muted mt-0.5">Skills Found</p>
+              </div>
+            </div>
+            {aiAnalysis.experience_summary && (
+              <p className="text-sm text-gray-300 mb-3">{aiAnalysis.experience_summary}</p>
+            )}
+            {aiAnalysis.strengths?.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs text-accent font-semibold mb-1">Strengths</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {aiAnalysis.strengths.map((s) => (
+                    <span key={s} className="badge bg-accent/10 text-accent">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {aiAnalysis.gaps?.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs text-yellow-400 font-semibold mb-1">Gaps to Address</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {aiAnalysis.gaps.map((g) => (
+                    <span key={g} className="badge bg-yellow-500/10 text-yellow-400">{g}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {aiAnalysis.suggested_focus_areas?.length > 0 && (
+              <div>
+                <p className="text-xs text-blue-400 font-semibold mb-1">Focus Areas for Interview</p>
+                <ul className="space-y-1">
+                  {aiAnalysis.suggested_focus_areas.map((f) => (
+                    <li key={f} className="text-sm text-gray-300">• {f}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
 
         {roadmap && (
           <div className="card mt-6">

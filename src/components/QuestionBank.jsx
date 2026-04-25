@@ -1,8 +1,17 @@
 import React, { useState } from 'react'
 
+const CATEGORY_COLORS = {
+  hr: 'bg-purple-500/10 text-purple-400',
+  communication: 'bg-blue-500/10 text-blue-400',
+  behavioural: 'bg-green-500/10 text-green-400',
+  technical: 'bg-orange-500/10 text-orange-400',
+  situational: 'bg-yellow-500/10 text-yellow-400',
+  motivational: 'bg-pink-500/10 text-pink-400',
+}
+
 /**
  * Props:
- *  - questions: { id, text, category, difficulty }[]
+ *  - questions: { id, text, category, difficulty, hint }[]
  *  - currentIndex: number
  *  - answeredIds: string[]  (set of answered question ids)
  *  - onSelect: (index: number) => void
@@ -42,6 +51,7 @@ export default function QuestionBank({ questions = [], currentIndex = 0, answere
           const globalIndex = questions.indexOf(q)
           const isActive = globalIndex === currentIndex
           const isAnswered = answeredIds.includes(q.id)
+          const catColor = CATEGORY_COLORS[q.category] || 'bg-accent/10 text-accent'
 
           return (
             <button
@@ -59,16 +69,21 @@ export default function QuestionBank({ questions = [], currentIndex = 0, answere
                 />
                 <span className="leading-snug">{q.text}</span>
               </div>
-              {q.difficulty && (
-                <div className="mt-2 ml-4.5">
+              <div className="mt-2 ml-4.5 flex items-center gap-2">
+                {q.category && (
+                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full capitalize ${catColor}`}>
+                    {q.category}
+                  </span>
+                )}
+                {q.difficulty && (
                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full
                     ${q.difficulty === 'easy' ? 'bg-green-500/10 text-green-400'
                       : q.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-400'
                       : 'bg-red-500/10 text-red-400'}`}>
                     {q.difficulty}
                   </span>
-                </div>
-              )}
+                )}
+              </div>
             </button>
           )
         })}
@@ -76,3 +91,4 @@ export default function QuestionBank({ questions = [], currentIndex = 0, answere
     </div>
   )
 }
+
