@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: #09090f;
+    color: #f9fafb;
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #111118;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e1e2e;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #374151;
+  }
+  ::selection {
+    background: rgba(34, 197, 94, 0.25);
+    color: #f9fafb;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-dim text-black font-semibold px-6 py-3 rounded-xl transition-all duration-200 inline-flex items-center gap-2 text-sm;
+  }
+  .btn-secondary {
+    @apply bg-card hover:bg-border text-white font-medium px-6 py-3 rounded-xl border border-border transition-all duration-200 inline-flex items-center gap-2 text-sm;
+  }
+  .card {
+    @apply bg-card border border-border rounded-2xl p-6;
+  }
+  .input {
+    @apply bg-surface border border-border rounded-xl px-4 py-3 text-white placeholder-muted text-sm focus:outline-none focus:border-accent transition-colors w-full;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full;
+  }
+  .section-label {
+    @apply text-accent text-xs font-semibold uppercase tracking-widest;
+  }
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* Animated gradient orb */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* Recording pulse ring */
+@keyframes ping-slow {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.recording-ring {
+  animation: ping-slow 1.5s ease-out infinite;
+}
+
+/* Waveform bars */
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+.wave-bar {
+  animation: wave 0.8s ease-in-out infinite;
+}
+.wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.wave-bar:nth-child(4) { animation-delay: 0.3s; }
+.wave-bar:nth-child(5) { animation-delay: 0.4s; }
+
+/* Stagger fade-up for children */
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 60ms; }
+.stagger > *:nth-child(3) { animation-delay: 120ms; }
+.stagger > *:nth-child(4) { animation-delay: 180ms; }
+.stagger > *:nth-child(5) { animation-delay: 240ms; }
