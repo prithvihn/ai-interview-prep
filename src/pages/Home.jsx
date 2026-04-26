@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SignInButton, UserButton, useAuth } from '@clerk/clerk-react'
 import Navbar from '../components/Navbar'
+import VerbixBackground from '../components/VerbixBackground'
 import { clerkAppearance } from '../utils/clerkAppearance'
 
 const ROLES = [
@@ -43,9 +44,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-bg text-white relative overflow-hidden">
-      {/* Background orbs */}
-      <div className="orb w-[500px] h-[500px] bg-accent top-[-120px] left-[-100px]" />
-      <div className="orb w-[400px] h-[400px] bg-blue-500 bottom-[200px] right-[-80px]" />
+      {/* WebGL animated background — landing page only */}
+      <VerbixBackground />
 
       {/* Nav */}
       <Navbar />
