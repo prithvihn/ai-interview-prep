@@ -85,3 +85,25 @@ export const getSession = async (sessionId) => {
 }
 
 export default api
+
+// ── TTS (Text-to-Speech) ─────────────────────────────────────────────────────
+/**
+ * Convert text to speech audio using the backend TTS service.
+ * Returns a Blob URL that can be played with an Audio element.
+ * @param {string} text - Text to speak
+ * @param {string} voice - Voice preset (default: male_professional)
+ * @returns {Promise<string>} Audio blob URL
+ */
+export const speakReaction = async (text, voice = 'male_professional') => {
+  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  const response = await fetch(`${baseURL}/api/tts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, voice }),
+  })
+
+  if (!response.ok) throw new Error('TTS failed')
+
+  const blob = await response.blob()
+  return URL.createObjectURL(blob)
+}

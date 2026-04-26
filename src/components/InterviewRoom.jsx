@@ -5,7 +5,7 @@ import FeedbackCard from './FeedbackCard'
 import QuestionBank from './QuestionBank'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition'
 import { useTTS } from '../hooks/useTTS'
-import { getFeedback, getNextQuestion } from '../utils/api'
+import { getFeedback, getNextQuestion, speakReaction } from '../utils/api'
 
 /**
  * Props:
@@ -29,6 +29,8 @@ export default function InterviewRoom({ session, onFinish }) {
 
   // Store the full backend response for the current answer
   const [currentFeedbackFull, setCurrentFeedbackFull] = useState(null)
+  const [interviewerSpeaking, setInterviewerSpeaking] = useState(false)
+  const audioRef = React.useRef(null)
 
   const answeredIds = answers.map((a) => a.questionId)
   const currentAnswer = answers.find((a) => a.questionId === currentQuestion?.id)
@@ -40,6 +42,41 @@ export default function InterviewRoom({ session, onFinish }) {
   } = useSpeechRecognition()
 
   const { speak, cancel: cancelTTS, isSpeaking } = useTTS()
+
+  // Play TTS audio for interviewer reaction
+  const playInterviewerReaction = async (text) => {
+    try {
+      setInterviewerSpeaking(true)
+      const audioUrl = await speakReaction(text)
+      const audio = new Audio(audioUrl)
+      audioRef.current = audio
+
+      audio.onended = () => {
+        setInterviewerSpeaking(false)
+        URL.revokeObjectURL(audioUrl)
+      }
+
+      audio.onerror = () => {
+        setInterviewerSpeaking(false)
+        URL.revokeObjectURL(audioUrl)
+      }
+
+      await audio.play()
+    } catch (err) {
+      console.error('Failed to play interviewer reaction:', err)
+      setInterviewerSpeaking(false)
+    }
+  }
+
+  // Cleanup audio on phase change or unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [phase, currentIndex])
 
   // Read question aloud when it changes
   useEffect(() => {
@@ -102,6 +139,12 @@ export default function InterviewRoom({ session, onFinish }) {
       }
 
       setFeedback(currentQuestion?.id, sessionFeedback)
+
+      // Play interviewer verbal reaction (non-blocking)
+      const reactionText = feedbackData.interviewer_reaction?.reaction
+      if (reactionText) {
+        playInterviewerReaction(reactionText)
+      }
     } catch (err) {
       console.error('AI feedback failed:', err)
       setAiError(
@@ -234,6 +277,11 @@ export default function InterviewRoom({ session, onFinish }) {
             <p className="text-xs text-muted mt-2 flex items-center gap-1.5">
               <WaveformIcon /> Reading aloud…
             </p>
+          )}
+          {phase === 'feedback' && interviewerSpeaking && (
+            <div className="text-sm text-accent mt-3 flex items-center gap-2 p-2.5 bg-accent/10 border border-accent/20 rounded-lg animate-pulse w-fit">
+              <WaveformIcon /> <span>Interviewer is responding...</span>
+            </div>
           )}
         </div>
 
